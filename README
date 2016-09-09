@@ -1,5 +1,37 @@
 Aionn is Python asyncio messaging library based on `nanomsg` and `nnpy`.
 
+The `aionn` API follows API of the `nnpy` Python library. The only
+difference is that the `aionn.Socket.recv` and `aionn.Socket.send` methods
+are coroutines.
+
+Example of pull socket::
+
+    import asyncio
+    import aionn
+    import nnpy
+
+    socket = aionn.Socket(nnpy.AF_SP, nnpy.PULL)
+    socket.bind('tcp://*:5555')
+
+    loop = asyncio.get_event_loop()
+    value = loop.run_until_complete(socket.recv())
+    print(value)
+
+Example of push socket::
+
+    import asyncio
+    import logging
+    import aionn
+    import nnpy
+
+    socket = aionn.Socket(nnpy.AF_SP, nnpy.PUSH)
+    socket.connect('tcp://localhost:5555')
+
+    loop = asyncio.get_event_loop()
+    value = loop.run_until_complete(socket.send('some data'))
+
+See also `examples` directory.
+
 Requirements
 
 - `nnpy` ver. 1.3
