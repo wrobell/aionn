@@ -25,13 +25,13 @@ import aionn
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
-async def writer(pub, delay=1):
+async def writer(socket, delay=1):
     i = 0
     while True:
         await asyncio.sleep(delay)
         print('sending...')
         value = '{:04} '.format(i) + 'x' * 100
-        await pub.send(value)
+        await socket.send(value)
         print('sent', value[:10])
         i += 1
 
