@@ -17,6 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from nnpy.constants import *
+from nnpy.errors import NNError
+
 from .socket import Socket
 
 # vim: sw=4:et:ai

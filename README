@@ -8,9 +8,8 @@ Example of pull socket::
 
     import asyncio
     import aionn
-    import nnpy
 
-    socket = aionn.Socket(nnpy.AF_SP, nnpy.PULL)
+    socket = aionn.Socket(aionn.AF_SP, aionn.PULL)
     socket.bind('tcp://*:5555')
 
     loop = asyncio.get_event_loop()
@@ -22,9 +21,8 @@ Example of push socket::
     import asyncio
     import logging
     import aionn
-    import nnpy
 
-    socket = aionn.Socket(nnpy.AF_SP, nnpy.PUSH)
+    socket = aionn.Socket(aionn.AF_SP, aionn.PUSH)
     socket.connect('tcp://localhost:5555')
 
     loop = asyncio.get_event_loop()

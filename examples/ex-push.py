@@ -21,7 +21,6 @@
 import asyncio
 import logging
 import aionn
-import nnpy
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -36,7 +35,7 @@ async def writer(pub, delay=1):
         print('sent', value[:10])
         i += 1
 
-socket = aionn.Socket(nnpy.AF_SP, nnpy.PUSH)
+socket = aionn.Socket(aionn.AF_SP, aionn.PUSH)
 socket.connect('tcp://localhost:5555')
 
 loop = asyncio.get_event_loop()
