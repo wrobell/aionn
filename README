@@ -1,5 +1,10 @@
 Aionn is Python asyncio messaging library based on `nanomsg` and `nnpy`.
 
+Features
+
+- simple API consistent with `nnpy` Python library
+- no custom event loop
+
 The `aionn` API follows API of the `nnpy` Python library. The only
 difference is that the `aionn.Socket.recv` and `aionn.Socket.send` methods
 are coroutines.
