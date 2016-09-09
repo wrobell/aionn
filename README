@@ -6,3 +6,6 @@ Requirements
 - `nanomsg` ver. 1.0
 - Python ver 3.5
 
+The `aionn` library is licensed under terms of GPL license, version 3, see
+`COPYING <http://git.savannah.gnu.org/cgit/decotengu.git/plain/COPYING>`_
+file for details.
