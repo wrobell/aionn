@@ -37,7 +37,7 @@ See also `examples` directory.
 
 Requirements
 
-- `nnpy` ver. 1.3
+- `nnpy` ver. 1.3 (not released yet)
 - `nanomsg` ver. 1.0
 - Python ver 3.5
 
