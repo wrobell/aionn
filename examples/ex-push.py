@@ -31,7 +31,7 @@ async def writer(socket, delay=1):
         await asyncio.sleep(delay)
         print('sending...')
         value = '{:04} '.format(i) + 'x' * 100
-        await socket.send(value)
+        await socket.send(value.encode())
         print('sent', value[:10])
         i += 1
 

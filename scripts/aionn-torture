@@ -38,7 +38,7 @@ async def writer(pub, delay=1):
         await asyncio.sleep(delay)
         print('sending...')
         value = '{:04} '.format(i) + 'x' * 100
-        await pub.send(value)
+        await pub.send(value.encode())
         print('sent', value[:10])
         i += 1
 
