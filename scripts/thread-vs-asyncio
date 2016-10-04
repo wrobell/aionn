@@ -36,25 +36,16 @@ N = 8 # number of sockets (and threads)
 K = 10 ** 5 # number of messages to send/receive
 
 def start_sender():
-    def send(socket):
-        for i in range(K):
-            socket.send('value {}'.format(i))
-
-    executor = ThreadPoolExecutor(N)
-
     sockets = []
     for i in range(N):
         socket = nnpy.Socket(nnpy.AF_SP, nnpy.PUSH)
         socket.connect('tcp://localhost:{}'.format(5550 + i))
         sockets.append(socket)
 
-    futures = []
-    for socket in sockets:
-        fn = executor.submit(send, socket)
-        futures.append(fn)
-
-    for fn in as_completed(futures):
-        fn.result()
+    for i in range(K):
+        data = 'value {}'.format(i).encode()
+        for socket in sockets:
+            socket.send(data)
 
     for socket in sockets:
         socket.close()
@@ -62,7 +53,7 @@ def start_sender():
 def start_thread_receiver():
     def read(socket):
         for i in range(K):
-            v = socket.recv()
+            value = socket.recv()
 
     executor = ThreadPoolExecutor(N)
 
