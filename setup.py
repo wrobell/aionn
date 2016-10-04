@@ -41,7 +41,7 @@ Aionn is Python asyncio messaging library based on nanomsg and nnpy.
     ],
     keywords='asyncio messaging',
     license='GPL',
-    install_requires=[],
+    install_requires=['nnpy >= 1.3'],
     test_suite='nose.collector',
 )
 
