@@ -21,8 +21,10 @@ import asyncio
 import logging
 import nnpy
 
+from nnpy import NNError
 from nnpy.socket import ffi, nanomsg
 from nnpy.errors import convert as error_convert
+
 
 logger = logging.getLogger(__name__)
 
@@ -38,14 +40,13 @@ class Socket(nnpy.Socket):
             loop = asyncio.get_event_loop()
         self._loop = loop
 
-        self._reader = asyncio.Queue(loop=loop)
+        self._reader = None
         self._fd_reader = None
         self._read_flags = 0
 
         self._writer = asyncio.Event(loop=loop)
         self._fd_writer = None
         self._write_flags = 0
-
         self._data = None
 
     def bind(self, addr):
@@ -74,8 +75,8 @@ class Socket(nnpy.Socket):
         .. seealso:: `nn_send <http://nanomsg.org/v1.0.0/nn_recv.3.html>`_
         """
         self._read_flags = flags | nnpy.DONTWAIT
-        value = await self._reader.get()
-        return value
+        self._reader = self._loop.create_future()
+        return (await self._reader)
 
     async def send(self, data, flags=0):
         """
@@ -99,12 +100,22 @@ class Socket(nnpy.Socket):
         await self._writer.wait()
 
     def _notify_recv(self):
-        data = ffi.new('char**')
-        rc = nanomsg.nn_recv(self.sock, data, NN_MSG, self._read_flags)
-        # TODO: EAGAIN
-        error_convert(rc)
-        self._reader.put_nowait(ffi.buffer(data[0], rc)[:])
-        nanomsg.nn_freemsg(data[0])
+        reader = self._reader
+        if self._reader and not self._reader.done():
+            data = ffi.new('char**')
+            rc = nanomsg.nn_recv(self.sock, data, NN_MSG, self._read_flags)
+            if rc < 0:
+                self._reader.set_exception(_error(rc))
+            else:
+                self._reader.set_result(ffi.buffer(data[0], rc)[:])
+            nanomsg.nn_freemsg(data[0])
+        else:
+            if __debug__:
+                logger.debug('recv not awaited, delay reader')
+            # if Socket.recv not awaited then simply wait and in the future
+            # use NN_RCVTIMEO to timeout socket data retrieval
+            self._loop.remove_reader(self._fd_reader)
+            self._loop.call_later(1, self._enable_reader)
 
     def _notify_send(self):
         if self._data is not None:
@@ -140,5 +151,10 @@ class Socket(nnpy.Socket):
         except nnpy.NNError as ex:
             if ex.error_no != ENOPROTOOPT:
                 raise
+
+def _error(rc):
+    error_no = nanomsg.nn_errno()
+    msg = nanomsg.nn_strerror(error_no)
+    return NNError(error_no, ffi.string(msg).decode())
 
 # vim: sw=4:et:ai
