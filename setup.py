@@ -26,7 +26,7 @@ setup(
     description='aionn - asyncio messaging library based on nanomsg and nnpy',
     author='Artur Wroblewski',
     author_email='wrobell@riseup.net',
-    url='http://wrobell.it-zone.org/aionn/',
+    url='https://github.com/wrobell/aionn',
     setup_requires = ['setuptools_git >= 1.0',],
     packages=find_packages('.'),
     include_package_data=True,
@@ -42,7 +42,6 @@ Aionn is Python asyncio messaging library based on nanomsg and nnpy.
     keywords='asyncio messaging',
     license='GPL',
     install_requires=['nnpy >= 1.3'],
-    test_suite='nose.collector',
 )
 
 # vim: sw=4:et:ai
