@@ -24,7 +24,6 @@ Example of pull socket::
 Example of push socket::
 
     import asyncio
-    import logging
     import aionn
 
     socket = aionn.Socket(aionn.AF_SP, aionn.PUSH)
