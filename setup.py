@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='aionn',
-    version='0.1.0',
+    version='0.2.0',
     description='aionn - asyncio messaging library based on nanomsg and nnpy',
     author='Artur Wroblewski',
     author_email='wrobell@riseup.net',
@@ -41,7 +41,7 @@ Aionn is Python asyncio messaging library based on nanomsg and nnpy.
     ],
     keywords='asyncio messaging',
     license='GPL',
-    install_requires=['nnpy >= 1.3'],
+    install_requires=['nnpy >= 1.3', 'cffi >= 1.8.3'],
 )
 
 # vim: sw=4:et:ai
