@@ -23,8 +23,6 @@ import nnpy
 
 from nnpy import NNError
 from nnpy.socket import ffi, nanomsg
-from nnpy.errors import convert as error_convert
-
 
 logger = logging.getLogger(__name__)
 
@@ -44,7 +42,7 @@ class Socket(nnpy.Socket):
         self._fd_reader = None
         self._read_flags = 0
 
-        self._writer = asyncio.Event(loop=loop)
+        self._writer = None
         self._fd_writer = None
         self._write_flags = 0
         self._data = None
@@ -97,7 +95,8 @@ class Socket(nnpy.Socket):
         """
         self._data = data
         self._write_flags = flags | nnpy.DONTWAIT
-        await self._writer.wait()
+        self._writer = self._loop.create_future()
+        await self._writer
 
     def _notify_recv(self):
         reader = self._reader
@@ -130,10 +129,10 @@ class Socket(nnpy.Socket):
                     logger.debug('EAGAIN on send, delay sender')
                 self._loop.remove_writer(self._fd_writer)
                 self._loop.call_later(1, self._enable_writer)
+            elif rc < 0:
+                self._writer.set_exception(_error(rc))
             else:
-                error_convert(rc, rc)
-                self._writer.set()
-                self._writer.clear()
+                self._writer.set_result(None)
                 self._data = None
 
     def _enable_reader(self):
