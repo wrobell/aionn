@@ -107,7 +107,7 @@ class Socket(nnpy.Socket):
                 self._reader.set_exception(_error(rc))
             else:
                 self._reader.set_result(ffi.buffer(data[0], rc)[:])
-            nanomsg.nn_freemsg(data[0])
+                nanomsg.nn_freemsg(data[0])
         else:
             if __debug__:
                 logger.debug('recv not awaited, delay reader')
