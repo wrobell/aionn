@@ -107,6 +107,8 @@ class Socket(nnpy.Socket):
                 self._reader.set_exception(_error(rc))
             else:
                 self._reader.set_result(ffi.buffer(data[0], rc)[:])
+
+                assert rc >= 0, 'nn_freemsg should be called when nn_recv is successful'
                 nanomsg.nn_freemsg(data[0])
         else:
             if __debug__:
