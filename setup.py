@@ -22,7 +22,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='aionn',
-    version='0.2.0',
+    version='0.3.0',
     description='aionn - asyncio messaging library based on nanomsg and nnpy',
     author='Artur Wroblewski',
     author_email='wrobell@riseup.net',
