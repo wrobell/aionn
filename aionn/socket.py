@@ -47,14 +47,14 @@ class Socket(nnpy.Socket):
         self._write_flags = 0
         self._data = None
 
+        self._fd_poll = ffi.new('struct nn_pollfd[]', [(self.sock, nnpy.POLLOUT, 0)])
+
     def bind(self, addr):
         super().bind(addr)
-        self._enable_writer()
         self._enable_reader()
 
     def connect(self, addr):
         super().connect(addr)
-        self._enable_writer()
         self._enable_reader()
 
     async def recv(self, flags=0):
@@ -87,29 +87,50 @@ class Socket(nnpy.Socket):
         The data is always sent with `NN_DONTWAIT` flag enabled. Therefore
         the `flags` parameter is ignored in practice at the moment.
 
+        Return number of sent bytes.
+
         :param data: Data to be sent.
         :param flags: Sending data flags.
 
         .. seealso:: `ffi.from_buffer <http://cffi.readthedocs.io/en/latest/ref.html#ffi-buffer-ffi-from-buffer>`_
         .. seealso:: `nn_send <http://nanomsg.org/v1.0.0/nn_send.3.html>`_
         """
-        self._data = data
         self._write_flags = flags | nnpy.DONTWAIT
-        self._writer = self._loop.create_future()
-        await self._writer
+
+        # sockets are usually available for writing; check availability and
+        # write immediately; otherwise await coroutine and allow
+        # _notify_send to resume the
+        rc = nanomsg.nn_poll(self._fd_poll, 1, 0)
+        if rc == 1:
+            data = ffi.from_buffer(data)
+            rc = nanomsg.nn_send(self.sock, data, len(data), self._write_flags)
+            # the socket was just polled, so do not expect EAGAIN
+            if rc < 0:
+                raise _error(rc)
+            return rc
+        else:
+            self._data = data
+            self._writer = self._loop.create_future()
+            self._enable_writer()
+            return (await self._writer)
 
     def _notify_recv(self):
         reader = self._reader
         if self._reader and not self._reader.done():
             data = ffi.new('char**')
             rc = nanomsg.nn_recv(self.sock, data, NN_MSG, self._read_flags)
-            if rc < 0:
-                self._reader.set_exception(_error(rc))
-            else:
+            if rc >= 0:
                 self._reader.set_result(ffi.buffer(data[0], rc)[:])
 
                 assert rc >= 0, 'nn_freemsg should be called when nn_recv is successful'
                 nanomsg.nn_freemsg(data[0])
+            elif nanomsg.nn_errno() == EAGAIN:
+                if __debug__:
+                    # if SUB socket, data was sent to different topic
+                    logger.debug('socket temporarily unavailable for reading')
+            else:
+                assert rc < 0 and nanomsg.nn_errno() != EAGAIN
+                self._reader.set_exception(_error(rc))
         else:
             if __debug__:
                 logger.debug('recv not awaited, delay reader')
@@ -119,23 +140,29 @@ class Socket(nnpy.Socket):
             self._loop.call_later(1, self._enable_reader)
 
     def _notify_send(self):
-        if self._data is not None:
-            data = ffi.from_buffer(self._data)
-            rc = nanomsg.nn_send(self.sock, data, len(data), self._write_flags)
-            if rc < 0 and nanomsg.nn_errno() == EAGAIN:
-                # avoid blocking sender by delaying next write; in the
-                # future, use NN_SNDTIMEO and allow the operation to
-                # timeout; at the moment we use default timeout approach
-                # (infinite timeout), see nn_setsockopt(3)/NN_SNDTIMEO
-                if __debug__:
-                    logger.debug('EAGAIN on send, delay sender')
-                self._loop.remove_writer(self._fd_writer)
-                self._loop.call_later(1, self._enable_writer)
-            elif rc < 0:
-                self._writer.set_exception(_error(rc))
-            else:
-                self._writer.set_result(None)
-                self._data = None
+        self._loop.remove_writer(self._fd_writer)
+        assert self._data is not None
+
+        # fixme: despite push socket not able to send data, asyncio will
+        # report it as writeable; looks like conflict between nanomsg and
+        # asyncio approach to monitoring of sockets; figure this out
+        data = ffi.from_buffer(self._data)
+        rc = nanomsg.nn_send(self.sock, data, len(data), self._write_flags)
+        if rc >= 0:
+            self._writer.set_result(rc)
+            self._data = None
+        elif rc < 0 and nanomsg.nn_errno() == EAGAIN:
+            if __debug__:
+                logger.debug('socket temporarily unavailable for writing')
+            # avoid blocking sender by delaying next write; in the
+            # future, use NN_SNDTIMEO and allow the operation to
+            # timeout; at the moment we use default timeout approach
+            # (infinite timeout), see nn_setsockopt(3)/NN_SNDTIMEO
+            self._loop.call_later(1, self._enable_writer)
+        else:
+            assert rc < 0 and nanomsg.nn_errno() != EAGAIN
+            self._writer.set_exception(_error(rc))
+            self._loop.call_later(1, self._enable_writer)
 
     def _enable_reader(self):
         try:

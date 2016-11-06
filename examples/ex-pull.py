@@ -32,7 +32,7 @@ async def reader(socket):
         print('received:', value[:10])
 
 socket = aionn.Socket(aionn.AF_SP, aionn.PULL)
-socket.bind('tcp://*:5555')
+socket.connect('tcp://127.0.0.1:5555')
 loop = asyncio.get_event_loop()
 loop.run_until_complete(reader(socket))
 

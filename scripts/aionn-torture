@@ -45,9 +45,9 @@ async def writer(pub, delay=1):
 loop = asyncio.get_event_loop()
 
 sub = aionn.Socket(aionn.AF_SP, aionn.PULL)
-sub.bind('tcp://*:5555')
+sub.connect('tcp://127.0.0.1:5555')
 pub = aionn.Socket(aionn.AF_SP, aionn.PUSH)
-pub.connect('tcp://localhost:5555')
+pub.bind('tcp://127.0.0.1:5555')
 
 # slow sender, normal receiver
 # loop.run_until_complete(asyncio.gather(reader(sub), writer(pub)))
