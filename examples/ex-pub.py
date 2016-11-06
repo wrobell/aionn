@@ -36,7 +36,7 @@ async def writer(socket, delay=1):
         i += 1
 
 socket = aionn.Socket(aionn.AF_SP, aionn.PUB)
-socket.connect('tcp://localhost:5555')
+socket.bind('tcp://127.0.0.1:5555')
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(writer(socket))
