@@ -30,13 +30,13 @@ Example of push socket::
     socket.connect('tcp://localhost:5555')
 
     loop = asyncio.get_event_loop()
-    value = loop.run_until_complete(socket.send('some data'))
+    loop.run_until_complete(socket.send('some data'))
 
 See also `examples` directory.
 
 Requirements
 
-- `nnpy` ver. 1.3 (not released yet)
+- `nnpy` ver. 1.3
 - `nanomsg` ver. 1.0
 - Python ver. 3.5
 
