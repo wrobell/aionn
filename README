@@ -1,3 +1,8 @@
+===========================================================================
+This project is deprecated. You might try any future nng Python bindings or
+simply use PyZMQ since version 0.17 gets rid of custom event loop.
+===========================================================================
+
 Aionn is Python asyncio messaging library based on `nanomsg` and `nnpy`.
 
 Features
